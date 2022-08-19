@@ -7,14 +7,8 @@
 class Address {
 
 public:
-    void set_city(std::string city) { this->city = city; }
-    void set_street(std::string street) { this->street = street; }
-    void set_house_num(std::string house_num) { this->house_num = house_num; }
-    void set_apart_num(int apart_num) { this->apart_num = apart_num; }
     std::string get_city() { return city; }
-    //std::string get_street() { return street; }
-    //std::string get_house_num() { return house_num; }
-    //int get_apart_num() { return apart_num; }
+
     std::string get_full_address()
     {
         return city + ", " + street + ", " + house_num + ", " + std::to_string(apart_num);
@@ -43,16 +37,16 @@ bool read_address(std::fstream& fin, std::string& city, std::string& street, std
     return false;
 }
 
-void sort(Address* addresses, int size)
+void sort(Address** addresses, int size)
 {
     //Пузырьковая сортировка
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size - 1; j++)
         {
-            if (addresses[j].get_city() > addresses[j + 1].get_city())
+            if (addresses[j]->get_city() > addresses[j + 1]->get_city())
             {
-                Address tmp = addresses[j];
+                Address* tmp = addresses[j];
                 addresses[j] = addresses[j + 1];
                 addresses[j + 1] = tmp;
             }
@@ -78,15 +72,12 @@ int main()
             }
             std::string city, street, house_num;
             int apart_num = 0;
-            Address* addr_list = new Address[addr_count];
+            Address** addr_list = new Address* [addr_count];
             for (int i = 0; i < addr_count; ++i)                //Читаем адреса из файла
             {
                 if (read_address(fin, city, street, house_num, apart_num))
                 {
-                    addr_list[i].set_city(city);
-                    addr_list[i].set_street(street);
-                    addr_list[i].set_house_num(house_num);
-                    addr_list[i].set_apart_num(apart_num);
+                    addr_list[i] = new Address(city, street, house_num, apart_num);
                 }
                 else
                 {
@@ -109,9 +100,10 @@ int main()
                 {
                     for (int i = 0 ; i < addr_count; ++i)
                     {
-                        if (!(fout << addr_list[i].get_full_address() << std::endl))
+                        if (!(fout << addr_list[i]->get_full_address() << std::endl))
                         {
                             std::cout << "Ошибка записи " << i << "(ого/его) адреса в файл " << out_file_name << std::endl;
+                            for (int j = 0; j < addr_count; ++j) { delete addr_list[j]; }
                             delete[] addr_list;
                             addr_list = nullptr;
                             fout.close();
@@ -123,6 +115,7 @@ int main()
                 else
                 {
                     std::cout << "Ошибка записи количества адресов в файл " << out_file_name << std::endl;
+                    for (int j = 0; j < addr_count; ++j) { delete addr_list[j]; }
                     delete[] addr_list;
                     addr_list = nullptr;
                     fout.close();
@@ -132,11 +125,12 @@ int main()
             else
             {
                 std::cout << "Ошибка создания выходного файла " << out_file_name << std::endl;
+                for (int j = 0; j < addr_count; ++j) { delete addr_list[j]; }
                 delete[] addr_list;
                 addr_list = nullptr;
                 return 5;
             }
-
+            for (int j = 0; j < addr_count; ++j) { delete addr_list[j]; }
             delete[] addr_list;
             addr_list = nullptr;
         }
